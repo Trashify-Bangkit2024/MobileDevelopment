@@ -5,58 +5,54 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
-import androidx.lifecycle.viewModelScope
-import com.example.trashify.data.reponse.UserRepo
-import com.example.trashify.data.api.ApiConfig
+import com.example.trashify.data.api.ApiService
 import com.example.trashify.data.preference.UserModel
 import com.example.trashify.data.reponse.ErrorResponse
+import com.example.trashify.data.reponse.PredictionResponse
+import com.example.trashify.data.reponse.UserRepo
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.HttpException
 
-class AddStoryViewModel(private val repository: UserRepo): ViewModel() {
+class AddStoryViewModel(
+    private val repository: UserRepo,
+    private val apiService: ApiService
+) : ViewModel() {
 
     private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading = _isLoading
+    val isLoading: LiveData<Boolean> = _isLoading
 
     private val _response = MutableStateFlow("")
-    val response = _response
 
-    init {
-        getSession()
-    }
+    private val _predictionResponse = MutableLiveData<PredictionResponse>()
+    val predictionResponse: LiveData<PredictionResponse> = _predictionResponse
 
     fun getSession(): LiveData<UserModel> {
         return repository.getSession().asLiveData()
     }
 
-    suspend fun uploadImage(
-        token: String,
-        imageFile: MultipartBody.Part,
-        requestBody: RequestBody
-    ){
+    suspend fun uploadImage(uid: String, imagePart: MultipartBody.Part) {
         _isLoading.value = true
-        viewModelScope.launch {
-            try {
-                val apiService = ApiConfig.getApiService()
-                val successResponse = apiService.uploadImage("Bearer $token", imageFile, requestBody)
-                _response.value = successResponse.message
-                Log.d(TAG, "uploadImage sucess: ${successResponse.message}")
-            } catch (e: HttpException){
-                val errorBody = e.response()?.errorBody()?.string()
-                val errorResponse = Gson().fromJson(errorBody, ErrorResponse::class.java)
-                _response.value = errorResponse.message
-                Log.d(TAG, "uploadImage fail: ${errorResponse.message}")
-            } finally {
-                _isLoading.value = false
-            }
+        try {
+            val uidBody = uid.toRequestBody("text/plain".toMediaType())
+            val predictionResponse = apiService.postPrediction(uidBody, imagePart)
+            _response.value = "Image uploaded successfully"
+            _predictionResponse.postValue(predictionResponse)
+        } catch (e: HttpException) {
+            val errorBody = e.response()?.errorBody()?.string()
+            val errorResponse = Gson().fromJson(errorBody, ErrorResponse::class.java)
+            _response.value = errorResponse.message
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during image upload: ${e.message}")
+        } finally {
+            _isLoading.value = false
         }
     }
 
-    companion object{
+    companion object {
         private const val TAG = "AddStoryViewModel"
     }
 }

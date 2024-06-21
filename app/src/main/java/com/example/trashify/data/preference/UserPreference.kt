@@ -1,10 +1,12 @@
 package com.example.trashify.data.preference
 
+import android.content.ContentValues.TAG
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -15,11 +17,18 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "se
 class UserPreference private constructor(private val dataStore: DataStore<Preferences>) {
 
     suspend fun saveSession(user: UserModel) {
-        dataStore.edit { preferences ->
-            preferences[EMAIL_KEY] = user.email
-            preferences[TOKEN_KEY] = user.token
-            preferences[NAME_KEY] = user.name
-            preferences[LOGIN_KEY] = true
+        try {
+            Log.d(TAG, "Saving session for user: $user")
+            dataStore.edit { preferences ->
+                preferences[EMAIL_KEY] = user.email
+                preferences[UID_KEY] = user.uid
+                preferences[NAME_KEY] = user.name
+                preferences[IMAGE_PROFILE_KEY] = user.userImageProfile
+                preferences[LOGIN_KEY] = user.isLogin
+            }
+            Log.d(TAG, "Session saved successfully")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to save session", e)
         }
     }
 
@@ -27,8 +36,9 @@ class UserPreference private constructor(private val dataStore: DataStore<Prefer
         return dataStore.data.map { preferences ->
             UserModel(
                 preferences[EMAIL_KEY] ?: "",
-                preferences[TOKEN_KEY] ?: "",
+                preferences[UID_KEY] ?: "",
                 preferences[NAME_KEY] ?: "",
+                preferences[IMAGE_PROFILE_KEY] ?: "",
                 preferences[LOGIN_KEY] ?: false
             )
         }
@@ -44,8 +54,9 @@ class UserPreference private constructor(private val dataStore: DataStore<Prefer
         private var INSTANCE: UserPreference? = null
 
         private val EMAIL_KEY = stringPreferencesKey("email")
-        private val TOKEN_KEY = stringPreferencesKey("token")
+        private val UID_KEY = stringPreferencesKey("uid")
         private val NAME_KEY = stringPreferencesKey("name")
+        private val IMAGE_PROFILE_KEY = stringPreferencesKey("userImageProfile")
         private val LOGIN_KEY = booleanPreferencesKey("isLogin")
 
         fun getInstance(dataStore: DataStore<Preferences>): UserPreference {

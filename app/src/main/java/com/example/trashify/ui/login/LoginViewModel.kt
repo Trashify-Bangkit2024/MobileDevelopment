@@ -1,61 +1,53 @@
 package com.example.trashify.ui.login
 
+import android.content.ContentValues.TAG
 import android.util.Log
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.trashify.data.reponse.UserRepo
 import com.example.trashify.data.api.ApiConfig
-import com.example.trashify.data.preference.UserModel
 import com.example.trashify.data.reponse.LoginResponse
+import com.example.trashify.data.reponse.LoginResult
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 import retrofit2.HttpException
 
-class LoginViewModel(private val repository: UserRepo) : ViewModel() {
-    private val responseMsg = MutableStateFlow<String?>(null)
-    val getToken = MutableStateFlow<String?>("")
-    val isLoading = MutableLiveData<Boolean>()
+class LoginViewModel : ViewModel() {
+    val isLoading = MutableStateFlow(false)
+    val responseMsg = MutableStateFlow<String?>(null)
 
-    suspend fun login(email: String, password: String) {
+    suspend fun login(email: String, password: String): LoginResult? {
         isLoading.value = true
-        try {
+        return try {
             val apiService = ApiConfig.getApiService()
-            val successResponse = apiService.login(email, password)
+            val body = mapOf(
+                "email" to email,
+                "password" to password
+            )
+            val response = apiService.login(body)
+            Log.d(TAG, "Full response: ${response.uid}")
+            isLoading.value = false
+            responseMsg.value = response.message
 
-            responseMsg.value = successResponse.message
-            getToken.value = successResponse.loginResult?.token
-
-            if (successResponse.loginResult != null) {
-                val user = UserModel(
-                    email = email,
-                    token = getToken.value ?: "",
-                    name = successResponse.loginResult?.name ?: ""
+            response.uid?.let { userDetail ->
+                Log.d(TAG, "User detail extracted: $userDetail")
+                LoginResult(
+                    name = userDetail.userName,
+                    uid = userDetail.uid,
+                    email = userDetail.email,
+                    userImageProfile = userDetail.userImageProfile
                 )
-                saveSession(user)
             }
-
-            Log.d(TAG, "Login success: ${successResponse.message}")
-            Log.d(TAG, "Login result: ${successResponse.loginResult}")
         } catch (e: HttpException) {
+            isLoading.value = false
             val errorBody = e.response()?.errorBody()?.string()
             val errorResponse = Gson().fromJson(errorBody, LoginResponse::class.java)
             responseMsg.value = errorResponse.message
-
-            Log.d(TAG, "Login error: ${errorResponse.message}")
+            Log.e(TAG, "Login error: ${errorResponse.message}", e)
+            null
+        } catch (e: Exception) {
+            Log.e(TAG, "General error", e)
+            responseMsg.value = "General error"
+            isLoading.value = false
+            null
         }
-        isLoading.value = false
-    }
-
-    fun saveSession(user: UserModel) {
-        viewModelScope.launch {
-            repository.saveSession(user)
-        }
-    }
-
-    companion object {
-        private const val TAG = "LoginViewModel"
     }
 }
-

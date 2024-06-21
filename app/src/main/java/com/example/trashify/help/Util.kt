@@ -7,10 +7,8 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.media.ExifInterface
 import android.net.Uri
-import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider
 import com.example.trashify.BuildConfig
 import java.io.ByteArrayOutputStream
@@ -27,18 +25,16 @@ private const val MAXIMAL_SIZE = 1000000
 
 /*Aman materi : Intent camera*/
 fun getImageUri(context: Context): Uri {
-    var uri: Uri? = null
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, "$timeStamp.jpg")
-            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-            put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/MyCamera/")
-        }
-        uri = context.contentResolver.insert(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            contentValues
-        )
+    val uri: Uri?
+    val contentValues = ContentValues().apply {
+        put(MediaStore.MediaColumns.DISPLAY_NAME, "$timeStamp.jpg")
+        put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+        put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/MyCamera/")
     }
+    uri = context.contentResolver.insert(
+        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+        contentValues
+    )
     return uri ?: getImageUriForPreQ(context)
 }
 
@@ -72,7 +68,6 @@ fun uriToFile(imageUri: Uri, context: Context): File {
 }
 
 /*Aman dari dicoding, materi : unnggah file ke server dengan retrofit*/
-@RequiresApi(Build.VERSION_CODES.Q)
 fun File.reduceFileImage(): File {
     val file = this
     val bitmap = BitmapFactory.decodeFile(file.path).getRotatedBitmap(file)
@@ -92,7 +87,6 @@ fun File.reduceFileImage(): File {
 }
 
 /*Aman dari dicoding, materi : unnggah file ke server dengan retrofit*/
-@RequiresApi(Build.VERSION_CODES.Q)
 fun Bitmap.getRotatedBitmap(file: File): Bitmap {
     val orientation = ExifInterface(file).getAttributeInt(
         ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED

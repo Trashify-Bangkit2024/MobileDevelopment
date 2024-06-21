@@ -8,8 +8,14 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
-
     <style name="Theme.Storyapp" parent="Base.Theme.Storyapp" />
+
+<!--    Splash Screen-->
+        <style name="Theme.Storyapp.Starting" parent="Theme.SplashScreen">
+            <item name="windowSplashScreenBackground">@color/white</item>
+            <item name="windowSplashScreenAnimatedIcon">@drawable/ic_icon</item>
+            <item name="postSplashScreenTheme">@style/Theme.Storyapp</item>
+        </style>
 
 <!--    FAB For Add Profile Picture-->
     <style name="FloatingActionButtonStyle1" parent="Widget.Design.FloatingActionButton">
@@ -33,4 +39,10 @@
         <item name="cornerSize">30%</item>
     </style>
 
+<!--    rounded corners-->
+    <style name="roundedImageView" parent="">
+        <item   name="cornerFamily">rounded</item>
+        <item   name="cornerSize">20dp</item>
+        <item   name="color">@color/white</item>
+    </style>
 </resources>

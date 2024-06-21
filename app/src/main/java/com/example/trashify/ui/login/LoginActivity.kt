@@ -2,14 +2,11 @@ package com.example.trashify.ui.login
 
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
-import android.content.ContentValues.TAG
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.WindowInsets
-import android.view.WindowManager
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -17,6 +14,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.trashify.R
 import com.example.trashify.ViewModelFactory
+import com.example.trashify.data.api.ApiConfig
+import com.example.trashify.data.preference.UserModel
+import com.example.trashify.data.preference.UserPreference
+import com.example.trashify.data.preference.dataStore
+import com.example.trashify.data.reponse.UserRepo
 import com.example.trashify.databinding.ActivityLoginBinding
 import com.example.trashify.ui.main.MainActivity
 import com.example.trashify.ui.register.RegisterActivity
@@ -24,16 +26,20 @@ import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
-    private val viewModel by viewModels<LoginViewModel> {
-        ViewModelFactory.getInstance(this)
-    }
+    private val viewModel by viewModels<LoginViewModel> { ViewModelFactory.getInstance(this) }
     private lateinit var email: EditText
     private lateinit var password: EditText
+    private lateinit var userRepo: UserRepo
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        val dataStore = this.dataStore
+        val userPreference = UserPreference.getInstance(dataStore)
+        val apiService = ApiConfig.getApiService()
+        userRepo = UserRepo.getInstance(userPreference, apiService)
 
         setupView()
         setupAction()
@@ -53,17 +59,39 @@ class LoginActivity : AppCompatActivity() {
             val passwordText = password.text.toString()
 
             lifecycleScope.launch {
-                viewModel.login(emailText, passwordText)
-                viewModel.getToken.collect { token ->
-                    if (!token.isNullOrEmpty()) {
-                        startActivity(Intent(this@LoginActivity, MainActivity::class.java))
-                        finish()
-                    } else {
-                        Log.e(TAG, "Failed to get token")
-                        showToast("Login Failed")
-                    }
+                val loginResult = viewModel.login(emailText, passwordText)
+                if (loginResult != null) {
+                    Log.d("LoginActivity", "Login Result: $loginResult")
+
+                    val user = UserModel(
+                        email = loginResult.email ?: "",
+                        uid = loginResult.uid ?: "",
+                        name = loginResult.name ?: "",
+                        userImageProfile = loginResult.userImageProfile ?: "",
+                        isLogin = true
+                    )
+
+                    Log.d("LoginActivity", "User Model: $user")
+
+                    saveSession(user)
+
+                    startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                    finish()
+                } else {
+                    val message = viewModel.responseMsg.value ?: "Login failed"
+                    showToast(message)
                 }
             }
+        }
+    }
+
+    private suspend fun saveSession(user: UserModel) {
+        try {
+            Log.d(TAG, "Saving session for user: $user")
+            userRepo.saveSession(user)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to save session", e)
+            showToast("Failed to save session")
         }
     }
 
@@ -76,19 +104,11 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun setupView() {
-        @Suppress("DEPRECATION")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.insetsController?.hide(WindowInsets.Type.statusBars())
-        } else {
-            window.setFlags(
-                WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN
-            )
-        }
+        window.insetsController?.hide(WindowInsets.Type.statusBars())
         supportActionBar?.hide()
 
-        viewModel.isLoading.observe(this@LoginActivity) {
-            showLoading(it)
+        lifecycleScope.launch {
+            viewModel.isLoading.collect { showLoading(it) }
         }
     }
 
@@ -126,5 +146,9 @@ class LoginActivity : AppCompatActivity() {
             )
             start()
         }
+    }
+
+    companion object {
+        private const val TAG = "LoginActivity"
     }
 }

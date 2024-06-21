@@ -6,52 +6,42 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
-import com.example.trashify.data.reponse.UserRepo
-import com.example.trashify.data.api.ApiConfig
+import com.example.trashify.data.api.ApiService
 import com.example.trashify.data.preference.UserModel
-import com.example.trashify.data.reponse.ErrorResponse
-import com.example.trashify.data.reponse.ListStoryItem
-import com.google.gson.Gson
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.example.trashify.data.reponse.PredictionResponse
+import com.example.trashify.data.reponse.UserRepo
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
 
-class MainViewModel(private val repository: UserRepo) : ViewModel() {
-
-    private val _getAllStoriesItem = MutableStateFlow<List<ListStoryItem>>(emptyList())
-    val getAllStoriesItem = _getAllStoriesItem
+class MainViewModel(
+    repository: UserRepo,
+    private val apiService: ApiService
+) : ViewModel() {
 
     private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading = _isLoading
+    val isLoading: LiveData<Boolean> = _isLoading
 
-    init {
-        getSession()
-    }
-    fun getAllStories(token: String){
+    private val _historyPredictionResponse = MutableLiveData<List<PredictionResponse>>()
+    val historyPredictionResponse: LiveData<List<PredictionResponse>> = _historyPredictionResponse
+
+    val session: LiveData<UserModel> = repository.getSession().asLiveData()
+
+    fun getPrediction(uid: String) {
         viewModelScope.launch {
+            _isLoading.value = true
+            Log.d(TAG, "Attempting to retrieve prediction for UID: $uid")
             try {
-                _isLoading.value = true
-                val apiService = ApiConfig.getApiService()
-                val successResponse = apiService.getStories("Bearer $token")
-                _getAllStoriesItem.value = successResponse.listStory
-
-                Log.d(TAG, "MainViewModel success: ${successResponse.message}")
-            } catch (e: HttpException){
-                val errorBody = e.response()?.errorBody()?.string()
-                val errorResponse = Gson().fromJson(errorBody, ErrorResponse::class.java)
-
-                Log.d(TAG, "MainViewModel error: ${errorResponse.message}")
+                val historyPrediction = apiService.getHistoryPrediction(uid)
+                Log.d(TAG, "Prediction retrieved: $historyPrediction")
+                _historyPredictionResponse.postValue(historyPrediction.predictions)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to get prediction for UID: $uid, Error: ${e.message}")
+            } finally {
+                _isLoading.value = false
             }
-            _isLoading.value = false
         }
     }
 
-    fun getSession(): LiveData<UserModel> {
-        return repository.getSession().asLiveData()
-    }
-
-    companion object{
+    companion object {
         private const val TAG = "MainViewModel"
     }
-
 }
