@@ -9,6 +9,7 @@ import android.media.ExifInterface
 import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
+import android.util.Log
 import androidx.core.content.FileProvider
 import com.example.trashify.BuildConfig
 import java.io.ByteArrayOutputStream
@@ -22,8 +23,8 @@ import java.util.Locale
 private const val FILENAME_FORMAT = "yyyyMMdd_HHmmss"
 private val timeStamp: String = SimpleDateFormat(FILENAME_FORMAT, Locale.US).format(Date())
 private const val MAXIMAL_SIZE = 1000000
+private const val MIN_COMPRESSION_QUALITY = 75
 
-/*Aman materi : Intent camera*/
 fun getImageUri(context: Context): Uri {
     val uri: Uri?
     val contentValues = ContentValues().apply {
@@ -54,7 +55,6 @@ fun createCustomTempFile(context: Context): File {
     return File.createTempFile(timeStamp, ".jpg", filesDir)
 }
 
-/*Aman dari dicoding, materi : unnggah file ke server dengan retrofit*/
 fun uriToFile(imageUri: Uri, context: Context): File {
     val myFile = createCustomTempFile(context)
     val inputStream = context.contentResolver.openInputStream(imageUri) as InputStream
@@ -67,8 +67,9 @@ fun uriToFile(imageUri: Uri, context: Context): File {
     return myFile
 }
 
-/*Aman dari dicoding, materi : unnggah file ke server dengan retrofit*/
 fun File.reduceFileImage(): File {
+    Log.d("reduceFileImage", "Original file size: ${this.length()}")
+
     val file = this
     val bitmap = BitmapFactory.decodeFile(file.path).getRotatedBitmap(file)
 
@@ -79,14 +80,22 @@ fun File.reduceFileImage(): File {
         bitmap.compress(Bitmap.CompressFormat.JPEG, compressQuality, bmpStream)
         val bmpPicByteArray = bmpStream.toByteArray()
         streamLength = bmpPicByteArray.size
-        compressQuality -= 5
-    } while (streamLength > MAXIMAL_SIZE)
+        if (streamLength > MAXIMAL_SIZE) {
+            compressQuality -= 5
+        }
+    } while (streamLength > MAXIMAL_SIZE && compressQuality > MIN_COMPRESSION_QUALITY)
+
+    if (compressQuality < MIN_COMPRESSION_QUALITY) {
+        compressQuality = MIN_COMPRESSION_QUALITY
+    }
+
     bitmap.compress(Bitmap.CompressFormat.JPEG, compressQuality, FileOutputStream(file))
+
+    Log.d("reduceFileImage", "Reduced file size: ${file.length()}")
 
     return file
 }
 
-/*Aman dari dicoding, materi : unnggah file ke server dengan retrofit*/
 fun Bitmap.getRotatedBitmap(file: File): Bitmap {
     val orientation = ExifInterface(file).getAttributeInt(
         ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED

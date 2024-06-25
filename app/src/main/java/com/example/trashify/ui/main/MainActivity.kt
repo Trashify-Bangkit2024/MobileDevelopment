@@ -59,7 +59,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.fab.setOnClickListener {
-            startActivity(Intent(this, AddStoryActivity::class.java))
+            val intent = Intent(this, AddStoryActivity::class.java)
+            intent.putExtra("caller", "MainActivity")
+            startActivity(intent)
         }
     }
 

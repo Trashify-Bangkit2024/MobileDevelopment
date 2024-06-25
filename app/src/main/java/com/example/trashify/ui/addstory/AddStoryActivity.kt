@@ -19,6 +19,7 @@ import com.example.trashify.help.getImageUri
 import com.example.trashify.help.reduceFileImage
 import com.example.trashify.help.uriToFile
 import com.example.trashify.ui.main.MainActivity
+import com.example.trashify.ui.profile.AboutActivity
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
@@ -30,11 +31,14 @@ class AddStoryActivity : AppCompatActivity() {
 
     private var currentImageUri: Uri? = null
     private var uid: String = ""
+    private var caller: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAddStoryBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        caller = intent.getStringExtra("caller")
 
         setupAction()
         observeSession()
@@ -74,6 +78,26 @@ class AddStoryActivity : AppCompatActivity() {
                     viewModel.uploadImage(uid, imagePart)
                 }
             } ?: showToast(getString(R.string.empty_image_warning))
+        }
+
+        binding.backButton.setOnClickListener {
+            navigateBack()
+        }
+    }
+
+    private fun navigateBack() {
+        when (caller) {
+            "MainActivity" -> {
+                val intent = Intent(this@AddStoryActivity, MainActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                startActivity(intent)
+            }
+            "AboutActivity" -> {
+                val intent = Intent(this@AddStoryActivity, AboutActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                startActivity(intent)
+            }
+            else -> finish()
         }
     }
 

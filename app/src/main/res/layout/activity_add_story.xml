@@ -11,15 +11,32 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/backButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:backgroundTint="@android:color/transparent"
+            android:contentDescription="back"
+            app:icon="@drawable/baseline_arrow_back_24"
+            app:iconSize="24dp"
+            app:iconTint="@color/black"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:elevation="0dp"
+            app:strokeWidth="0dp"
+            android:stateListAnimator="@null" />
+
         <androidx.cardview.widget.CardView
             android:id="@+id/previewImageCard"
             android:layout_width="match_parent"
             android:layout_height="450dp"
             android:layout_gravity="center"
             app:cardCornerRadius="40dp"
+            app:cardElevation="0dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toBottomOf="@id/backButton">
 
             <ImageView
                 android:id="@+id/previewImageView"
@@ -27,6 +44,7 @@
                 android:layout_height="match_parent"
                 android:contentDescription="@string/banner"
                 android:scaleType="centerCrop"
+                android:src="@drawable/baseline_image_24"
                 tools:src="@drawable/baseline_image_24" />
 
         </androidx.cardview.widget.CardView>
@@ -57,15 +75,19 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginEnd="4dp"
+                android:layout_marginEnd="8dp"
                 android:contentDescription="@string/gallery"
                 android:foreground="?attr/selectableItemBackgroundBorderless"
-                app:backgroundTint="@color/green"
+                android:text=""
+                android:gravity="center"
+                app:backgroundTint="@color/white"
+                app:strokeColor="@color/green"
+                app:strokeWidth="2dp"
                 app:cornerRadius="20dp"
                 app:icon="@drawable/baseline_photo_24"
-                app:iconGravity="textTop"
                 app:iconSize="35dp"
-                android:textSize="12sp" />
+                app:iconTint="@color/green"
+                app:iconGravity="textStart" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -80,32 +102,39 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="4dp"
+                android:layout_marginStart="8dp"
                 android:contentDescription="@string/camera"
                 android:foreground="?attr/selectableItemBackgroundBorderless"
-                app:backgroundTint="@color/green"
+                android:text=""
+                android:gravity="center"
+                app:backgroundTint="@color/white"
+                app:strokeColor="@color/green"
+                app:strokeWidth="2dp"
                 app:cornerRadius="20dp"
                 app:icon="@drawable/baseline_camera_alt_24"
-                app:iconGravity="textTop"
                 app:iconSize="35dp"
-                android:textSize="12sp" />
+                app:iconTint="@color/green"
+                app:iconGravity="textStart" />
         </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/uploadButton"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="90dp"
+            android:layout_marginStart="0dp"
+            android:layout_marginTop="70dp"
             android:layout_marginBottom="8dp"
             android:text="@string/upload"
+            android:textStyle="bold"
             app:cornerRadius="40dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/uploadSubtitle"
-            app:layout_constraintVertical_bias="1.0" />
+            app:layout_constraintTop_toBottomOf="@id/uploadSubtitle"
+            app:layout_constraintVertical_bias="1.0"
+            app:backgroundTint="@color/green"
+            android:textColor="@color/white" />
 
         <ProgressBar
             android:id="@+id/progressBar"

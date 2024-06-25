@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "269623201682",
+    "project_id": "grpc-crud",
+    "storage_bucket": "grpc-crud.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:269623201682:android:aa7699edd804dd02bbbb4b",
+        "android_client_info": {
+          "package_name": "com.example.trashify"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "269623201682-pbk9pjisp7kkjqa66ltf8r8ikbvhbvbd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxOXR8w2ui-466cDx4enNPHgo15WmjoSg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "269623201682-pbk9pjisp7kkjqa66ltf8r8ikbvhbvbd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
